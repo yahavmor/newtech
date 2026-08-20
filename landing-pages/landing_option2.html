@@ -126,6 +126,7 @@ footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,
       <input class="field" id="fEmail" type="email" placeholder="אימייל" autocomplete="email"/>
       <div class="err" id="eEmail">נא להזין אימייל תקין</div>
       <button class="btn-popup" id="popupBtn" onclick="submitForm()">שלח לי עכשיו</button>
+      <div class="err" id="eNetwork">משהו השתבש, נסה שוב בעוד רגע</div>
       <div class="legal-check" id="legalWrap">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;direction:rtl;">
           <input type="checkbox" id="legalBox" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#f5c842;cursor:pointer;"/>
@@ -159,6 +160,7 @@ window.submitForm = function submitForm() {
   document.getElementById('ePhone').classList.remove('show');
   document.getElementById('eEmail').classList.remove('show');
   document.getElementById('eLegal').classList.remove('show');
+  document.getElementById('eNetwork').classList.remove('show');
   if(!name) { document.getElementById('eName').classList.add('show'); ok=false; }
   if(!phone) { document.getElementById('ePhone').classList.add('show'); ok=false; }
   if(!email || email.indexOf('@')<0) { document.getElementById('eEmail').classList.add('show'); ok=false; }
@@ -169,9 +171,26 @@ window.submitForm = function submitForm() {
   btn.disabled = true;
   btn.textContent = 'שולח…';
 
-  /* TODO: this is where a webhook/CRM call for the new client goes once one is provided. */
-  document.getElementById('formFields').style.display = 'none';
-  document.getElementById('successMsg').classList.add('show');
+  fetch('https://hook.us1.make.com/19g2ghq1ov09lokda30oib1lv7vgvy5f', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      phone: phone,
+      email: email,
+      source: 'landing_option2',
+      page_url: window.location.href,
+      submitted_at: new Date().toISOString()
+    })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('bad status');
+    document.getElementById('formFields').style.display = 'none';
+    document.getElementById('successMsg').classList.add('show');
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'שלח לי עכשיו';
+    document.getElementById('eNetwork').classList.add('show');
+  });
 }
 
 (function() {
