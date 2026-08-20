@@ -186,6 +186,7 @@ window.submitForm = function submitForm() {
     if (!res.ok) throw new Error('bad status');
     document.getElementById('formFields').style.display = 'none';
     document.getElementById('successMsg').classList.add('show');
+    setTimeout(function() { window.location.href = 'panel_a.html'; }, 900);
   }).catch(function() {
     btn.disabled = false;
     btn.textContent = 'שלח לי עכשיו';
