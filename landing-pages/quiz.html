@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>NewTech | מיפוי מקצועי לעולם ה-AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;800;900&family=Assistant:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Heebo',sans-serif;direction:rtl;overflow-x:hidden;min-height:100svh;color:#fff;display:flex;flex-direction:column;align-items:center;position:relative;background-color:#0A0F1C;background-image:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(212,168,67,.18) 0%,transparent 65%),radial-gradient(ellipse 50% 35% at 10% 90%,rgba(100,80,10,.25) 0%,transparent 55%);}
+canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.page-wrap{position:relative;z-index:2;width:100%;max-width:520px;padding:32px 16px 60px;display:flex;flex-direction:column;align-items:center;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes btnPulse{0%,100%{box-shadow:0 6px 30px rgba(212,168,67,.5),0 0 0 0 rgba(212,168,67,0);}50%{box-shadow:0 8px 40px rgba(212,168,67,.75),0 0 0 8px rgba(212,168,67,.08);}}
+@keyframes btnShimmer{0%{background-position:200% center;}100%{background-position:0% center;}}
+@keyframes shine{0%{left:-120%}100%{left:160%}}
+
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;color:rgba(245,200,66,.85);text-align:center;margin-bottom:14px;}
+.step-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-align:center;margin-bottom:10px;letter-spacing:.02em;}
+.progress-track{width:100%;height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:26px;}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#b8860a,#f5c842);width:0%;transition:width .4s ease;}
+
+.card{width:100%;border-radius:16px;padding:30px 22px 26px;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(15,12,2,.95),rgba(25,20,3,.98));border:1.5px solid rgba(212,168,67,.35);box-shadow:0 0 40px rgba(212,168,67,.12),0 20px 60px rgba(0,0,0,.8);}
+
+.screen{display:none;width:100%;flex-direction:column;align-items:center;animation:fadeUp .45s ease both;}
+.screen.active{display:flex;}
+
+.headline{font-family:'Heebo',sans-serif;font-size:clamp(22px,5.2vw,28px);font-weight:900;text-align:center;line-height:1.3;margin-bottom:14px;text-wrap:balance;background:linear-gradient(160deg,#fff8cc 0%,#f5c842 30%,#d4920a 60%,#fff0a0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:15px;color:rgba(255,255,255,.7);text-align:center;line-height:1.75;margin-bottom:22px;max-width:440px;}
+.trust-line{font-size:13px;color:rgba(255,255,255,.4);text-align:center;margin-top:14px;}
+
+.q-title{font-size:clamp(19px,4.6vw,23px);font-weight:800;text-align:center;line-height:1.4;margin-bottom:22px;color:#fff;text-wrap:balance;}
+
+.option-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:right;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:14px 16px;margin-bottom:10px;color:#fff;font-family:'Heebo',sans-serif;font-size:15px;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;}
+.option-btn:hover{border-color:rgba(212,168,67,.5);background:rgba(255,255,255,.08);}
+.option-btn:focus-visible{outline:2px solid #f5c842;outline-offset:2px;}
+.option-btn.selected{border-color:#f5c842;background:rgba(212,168,67,.14);}
+.option-dot{flex-shrink:0;width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.35);position:relative;transition:border-color .2s;}
+.option-btn.selected .option-dot{border-color:#f5c842;}
+.option-btn.selected .option-dot::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#f5c842;}
+
+.btn-main{display:flex;width:100%;max-width:420px;height:58px;background:linear-gradient(135deg,#b8860a,#f5c842,#d4920a);background-size:200% auto;color:#000;font-family:'Heebo',sans-serif;font-size:18px;font-weight:900;border:none;border-radius:10px;cursor:pointer;align-items:center;justify-content:center;letter-spacing:.3px;position:relative;overflow:hidden;margin-top:8px;box-shadow:0 6px 30px rgba(212,168,67,.5);animation:btnPulse 2.5s ease-in-out infinite,btnShimmer 3s linear infinite;transition:transform .2s,box-shadow .2s;text-decoration:none;}
+.btn-main:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 10px 50px rgba(212,168,67,.7);}
+.btn-main::after{content:'';position:absolute;top:0;left:-120%;width:45%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:shine 2s ease-in-out infinite;}
+.btn-main:disabled{opacity:.6;cursor:not-allowed;}
+
+.back-link{background:none;border:none;color:rgba(255,255,255,.35);font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer;margin-top:16px;padding:6px;}
+.back-link:hover{color:rgba(255,255,255,.6);}
+
+.field{width:100%;height:50px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-family:'Heebo',sans-serif;font-size:15px;padding:0 14px;margin-bottom:10px;outline:none;direction:rtl;-webkit-appearance:none;transition:border .2s;}
+.field::placeholder{color:rgba(255,255,255,.3);}
+.field:focus{border-color:rgba(212,168,67,.5);background:rgba(255,255,255,.1);}
+.err{font-size:12px;color:#ff7070;margin:-6px 0 8px 2px;display:none;}
+.err.show{display:block;}
+
+.s-icon{font-size:44px;margin-bottom:12px;}
+.s-title{font-size:24px;font-weight:900;color:#4ade80;margin-bottom:12px;text-align:center;}
+.s-body{font-size:15px;color:rgba(255,255,255,.72);line-height:1.8;text-align:center;margin-bottom:16px;}
+.s-subtitle{font-size:15px;font-weight:800;color:#fff;text-align:center;margin:14px 0 8px;}
+.s-flow{font-size:14px;color:rgba(255,255,255,.65);text-align:center;line-height:2;margin-bottom:16px;}
+.s-closing{font-size:14px;font-weight:700;color:rgba(255,220,80,.85);text-align:center;line-height:1.7;}
+
+footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,255,.06);padding:14px 20px;text-align:center;font-family:'Assistant',sans-serif;font-size:11px;color:rgba(255,255,255,.18);line-height:2;margin-top:24px;}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<div class="page-wrap">
+  <p class="eyebrow" id="eyebrow">AI PROFESSIONAL MAPPING</p>
+  <div class="progress-track" id="progressTrack" style="display:none;">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="card">
+
+    <div class="screen active" id="screen-intro">
+      <h1 class="headline">מיפוי מקצועי לעולם ה-AI והמיומנויות החדשות</h1>
+      <p class="sub">5 שאלות קצרות שיעזרו לנו להבין את נקודת הפתיחה שלך, החוזקות שלך והכיוונים שכדאי לבחון ביחס למקום שבו אתה נמצא היום.<br><br>המטרה היא לא לתת לך עוד רשימה גנרית של "מקצועות AI" — אלא לזהות איפה הידע והכלים של העולם החדש יכולים להתחבר בצורה הכי טבעית אליך.</p>
+      <button class="btn-main" onclick="goToQuestion(0)">מתחילים את המיפוי →</button>
+      <p class="trust-line">כ־2 דקות • ללא עלות • התשובות משמשות למיקוד השיחה האישית שלך</p>
+    </div>
+
+    <div class="screen" id="screen-question">
+      <h2 class="q-title" id="qTitle"></h2>
+      <div id="qOptions"></div>
+      <button class="btn-main" id="qNextBtn" style="display:none;" onclick="advanceFromLastQuestion()">סיימתי — בואו ננתח את התשובות שלי →</button>
+      <button class="back-link" id="qBackBtn" onclick="goBack()">→ חזרה לשאלה הקודמת</button>
+    </div>
+
+    <div class="screen" id="screen-contact">
+      <p class="step-label">המיפוי הושלם ✓</p>
+      <h1 class="headline">נשאר רק לוודא שיש לנו את הפרטים הנכונים</h1>
+      <p class="sub">אנחנו עוברים על התשובות שלך כדי להגיע לשיחה עם תמונה ראשונית ולא להתחיל מאפס. במהלך 24 השעות הקרובות אחד מאנשי הצוות יחזור אליך לשיחת מיקוד של כ־20 דקות, ולכן חשוב לוודא שהטלפון והמייל מעודכנים.</p>
+      <input class="field" id="cName" type="text" placeholder="שם מלא" autocomplete="name"/>
+      <div class="err" id="ceName">נא להזין שם מלא</div>
+      <input class="field" id="cPhone" type="tel" placeholder="טלפון" autocomplete="tel" inputmode="numeric"/>
+      <div class="err" id="cePhone">נא להזין מספר טלפון</div>
+      <input class="field" id="cEmail" type="email" placeholder="אימייל" autocomplete="email"/>
+      <div class="err" id="ceEmail">נא להזין אימייל תקין</div>
+      <div class="err" id="ceNetwork">משהו השתבש, נסה שוב בעוד רגע</div>
+      <button class="btn-main" id="contactBtn" onclick="submitQuiz()">שלחו את המיפוי שלי לבדיקה →</button>
+    </div>
+
+    <div class="screen" id="screen-success">
+      <div class="s-icon">✅</div>
+      <div class="s-title">המיפוי שלך התקבל</div>
+      <p class="s-body">אנחנו עוברים עכשיו על התשובות שסימנת ומחברים אותן לנקודת הפתיחה, למטרות ולסגנון הלמידה שלך.</p>
+      <p class="s-subtitle">מה קורה עכשיו?</p>
+      <p class="s-flow">במהלך 24 השעות הקרובות ניצור איתך קשר לשיחת אפיון אישית של כ־20 דקות.<br>בשיחה: נחדד איפה אתה נמצא היום → נבין מה אתה רוצה להשיג → נעבור על התשובות שלך → ונבחן אילו תחומים ומיומנויות בעולם ה-AI והאוטומציה עשויים להתאים לך יותר.</p>
+      <p class="s-closing">שמור את הטלפון לידך — השיחה הבאה יכולה לעשות לך הרבה יותר סדר לגבי הצעד הנכון עבורך.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>NewTech &copy; כל הזכויות שמורות</footer>
+
+<script>
+var WEBHOOK = 'https://hook.us1.make.com/19g2ghq1ov09lokda30oib1lv7vgvy5f';
+
+var QUESTIONS = [
+  {
+    title: 'מה מתאר בצורה המדויקת ביותר את המקום המקצועי שלך היום?',
+    options: [
+      'שכיר/ה בתפקיד מקצועי או ניהולי',
+      'עצמאי/ת או בעל/ת עסק',
+      'עובד/ת בתחום שיווקי / דיגיטלי / טכנולוגי',
+      'נמצא/ת בתהליך של שינוי או בחינת כיוון חדש',
+      'עדיין לא ברור לי — אני רוצה להבין אילו אפשרויות קיימות'
+    ]
+  },
+  {
+    title: 'מה רמת החשיפה שלך היום ל-AI ואוטומציות?',
+    options: [
+      'כמעט שלא השתמשתי בכלים האלה',
+      'אני משתמש/ת ב-AI בעיקר לדברים בסיסיים',
+      'אני כבר משתמש/ת באופן קבוע, אבל לא בניתי מערכות או תהליכים',
+      'כבר התנסיתי באוטומציות / מערכות ואני רוצה להתקדם',
+      'אני נחשף/ת להרבה מידע אבל עדיין לא יודע/ת איך לחבר הכול יחד'
+    ]
+  },
+  {
+    title: 'איפה היית רוצה שהכלים החדשים ייצרו עבורך את הערך הגדול ביותר?',
+    options: [
+      'לחסוך זמן ולהפחית עבודה ידנית',
+      'להגדיל את התפוקה והערך שלי בעבודה',
+      'לרכוש מיומנות מקצועית חדשה ורלוונטית',
+      'לבנות פעילות / שירות / פרויקט נוסף משלי',
+      'להבין אילו אפשרויות בכלל יכולות להתאים לי'
+    ]
+  },
+  {
+    title: 'איך הכי קל לך להפוך ידע חדש ליכולת מעשית?',
+    options: [
+      'הסבר מסודר ואז תרגול שלב־אחר־שלב',
+      'עבודה על משימות ופרויקטים אמיתיים',
+      'ליווי אישי תוך כדי יישום',
+      'תוכן מוקלט שאני מתקדם בו בקצב שלי',
+      'שילוב של כמה מהאפשרויות'
+    ]
+  },
+  {
+    title: 'אם נסתכל 6–12 חודשים קדימה — איזו תוצאה תהיה הכי משמעותית עבורך?',
+    options: [
+      'להיות בעל/ת ערך גבוה יותר במקצוע שאני כבר נמצא/ת בו',
+      'לשלוט בכלי AI ואוטומציה ברמה שימושית ומעשית',
+      'לפתוח לעצמי אפשרות מקצועית נוספת',
+      'להשתמש בידע כדי לקדם עסק או פעילות קיימת',
+      'להבין קודם איזה כיוון בכלל מתאים לחוזקות שלי'
+    ]
+  }
+];
+
+var current = -1;
+var answers = new Array(QUESTIONS.length).fill(null);
+var lead = {};
+
+try {
+  var stored = localStorage.getItem('ntLead');
+  if (stored) lead = JSON.parse(stored);
+} catch (e) {}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function renderQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById('qTitle').textContent = q.title;
+  var wrap = document.getElementById('qOptions');
+  wrap.innerHTML = '';
+  q.options.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'option-btn' + (answers[current] === i ? ' selected' : '');
+    btn.innerHTML = '<span class="option-dot"></span><span>' + opt + '</span>';
+    btn.onclick = function() { selectOption(i); };
+    wrap.appendChild(btn);
+  });
+  document.getElementById('progressFill').style.width = ((current + 1) / QUESTIONS.length * 100) + '%';
+  document.getElementById('progressTrack').style.display = 'block';
+  document.getElementById('qBackBtn').style.display = current === 0 ? 'none' : 'inline-block';
+  document.getElementById('qNextBtn').style.display = (current === QUESTIONS.length - 1 && answers[current] !== null) ? 'flex' : 'none';
+  showScreen('screen-question');
+}
+
+function selectOption(i) {
+  answers[current] = i;
+  renderQuestion();
+  if (current < QUESTIONS.length - 1) {
+    setTimeout(function() { goToQuestion(current + 1); }, 380);
+  }
+}
+
+function goToQuestion(i) {
+  current = i;
+  renderQuestion();
+}
+
+function goBack() {
+  if (current > 0) goToQuestion(current - 1);
+  else showScreen('screen-intro');
+}
+
+function advanceFromLastQuestion() {
+  document.getElementById('progressTrack').style.display = 'none';
+  if (lead.name) document.getElementById('cName').value = lead.name;
+  if (lead.phone) document.getElementById('cPhone').value = lead.phone;
+  if (lead.email) document.getElementById('cEmail').value = lead.email;
+  showScreen('screen-contact');
+}
+
+function submitQuiz() {
+  var name = document.getElementById('cName').value.trim();
+  var phone = document.getElementById('cPhone').value.trim();
+  var email = document.getElementById('cEmail').value.trim();
+  var ok = true;
+  document.getElementById('ceName').classList.remove('show');
+  document.getElementById('cePhone').classList.remove('show');
+  document.getElementById('ceEmail').classList.remove('show');
+  document.getElementById('ceNetwork').classList.remove('show');
+  if (!name) { document.getElementById('ceName').classList.add('show'); ok = false; }
+  if (!phone) { document.getElementById('cePhone').classList.add('show'); ok = false; }
+  if (!email || email.indexOf('@') < 0) { document.getElementById('ceEmail').classList.add('show'); ok = false; }
+  if (!ok) return;
+
+  var btn = document.getElementById('contactBtn');
+  btn.disabled = true;
+  btn.textContent = 'שולח…';
+
+  var answersPayload = {};
+  QUESTIONS.forEach(function(q, i) {
+    answersPayload['q' + (i + 1)] = {
+      question: q.title,
+      answer: answers[i] !== null ? q.options[answers[i]] : null
+    };
+  });
+
+  fetch(WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: 'quiz_completed',
+      name: name,
+      phone: phone,
+      email: email,
+      source: lead.source || 'quiz_direct',
+      answers: answersPayload,
+      page_url: window.location.href,
+      submitted_at: new Date().toISOString()
+    })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('bad status');
+    showScreen('screen-success');
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'שלחו את המיפוי שלי לבדיקה →';
+    document.getElementById('ceNetwork').classList.add('show');
+  });
+}
+
+(function() {
+  var c = document.getElementById('particles');
+  var ctx = c.getContext('2d');
+  var W, H, pts = [];
+  function rsz() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+  rsz(); window.addEventListener('resize', rsz);
+  function rnd(a,b) { return Math.random()*(b-a)+a; }
+  function mk() { return {x:rnd(0,W),y:rnd(H*.05,H),r:rnd(.3,2),dx:rnd(-.3,.3),dy:rnd(-.9,-.1),o:rnd(.4,1),fade:rnd(.002,.007),gold:Math.random()>.3,ph:rnd(0,6.28)}; }
+  for(var i=0;i<120;i++) pts.push(mk());
+  var fr = 0;
+  function draw() {
+    ctx.clearRect(0,0,W,H); fr++;
+    for(var i=0;i<pts.length;i++) {
+      var p = pts[i];
+      var a = p.o*(.6+.4*Math.sin(fr*.04+p.ph));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.gold ? 'rgba(212,168,67,'+a+')' : 'rgba(255,220,80,'+a+')';
+      ctx.fill();
+      p.x+=p.dx; p.y+=p.dy; p.o-=p.fade;
+      if(p.o<=0||p.y<-10) pts[i]=mk();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

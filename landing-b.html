@@ -184,6 +184,9 @@ window.submitForm = function submitForm() {
     })
   }).then(function(res) {
     if (!res.ok) throw new Error('bad status');
+    try {
+      localStorage.setItem('ntLead', JSON.stringify({ name: name, phone: phone, email: email, source: 'landing-b', ts: Date.now() }));
+    } catch (e) {}
     document.getElementById('formFields').style.display = 'none';
     document.getElementById('successMsg').classList.add('show');
     setTimeout(function() { window.location.href = 'landing-pages/panel_b.html'; }, 900);
