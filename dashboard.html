@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>A/B Optimize · NewTech</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --card-soft: #fafafd;
+    --border: #ececf3; --border-2: #e0e2eb;
+    --text: #1f2540; --text-2: #6b7280; --text-3: #6f7689; --text-4: #8890a0;
+    --pa: #7c3aed; --pa-2: #6d28d9; --pa-soft: #f3effe; --pa-softer: #faf7ff; --pa-border: #e9defb;
+    --pb: #3b82f6; --pb-2: #2563eb; --pb-soft: #eff5ff; --pb-softer: #f5f9ff; --pb-border: #dbe7fb;
+    --f1: #d4920a; --f1-bg: #fdf6e3; --f1-border: #f5e0a8;
+    --f2: #3b82f6; --f2-bg: #eff5ff; --f2-border: #dbe7fb;
+    --f3: #d4920a; --f3-bg: #fdf6e3; --f3-border: #f5e0a8;
+    --f4: #7c3aed; --f4-bg: #f3effe; --f4-border: #e9defb;
+    --good: #10b981; --good-bg: #ecfdf5; --good-border: #d1f5e2;
+    --warn: #f59e0b; --warn-bg: #fef6e6; --warn-border: #fde8b8;
+    --bad: #ef4444;  --bad-bg: #fee2e2;  --bad-border: #fecaca;
+    --gold: #d4a72c; --gold-bg: #fdf6dc; --gold-border: #f5e3a0;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Heebo', sans-serif; direction: rtl;
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum"; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--pa); outline-offset: 2px; border-radius: 4px;
+  }
+
+  header.top {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border); padding: 14px 28px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #b8860a 0%, #f5c842 100%);
+    color: #1a1400; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; box-shadow: var(--shadow-md);
+  }
+  .brand-text { line-height: 1.2; }
+  .brand-text .name { font-size: 15px; font-weight: 700; }
+  .brand-text .sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .header-right { margin-right: auto; display: flex; align-items: center; gap: 14px; }
+  .sync-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-2); background: var(--card-soft);
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border);
+  }
+  .sync-pill::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--good); box-shadow: 0 0 0 3px var(--good-bg);
+  }
+  .sync-pill.err::before { background: var(--bad); box-shadow: 0 0 0 3px var(--bad-bg); }
+  .btn-refresh {
+    background: white; border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px 14px; font-family: inherit;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: all 0.15s; box-shadow: var(--shadow-sm);
+  }
+  .btn-refresh:hover { border-color: var(--pa); color: var(--pa); }
+  .btn-refresh.spinning svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  main { max-width: 1340px; margin: 0 auto; padding: 26px 28px 60px; }
+
+  .page-title { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .page-title h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .page-title-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--pa-soft); color: var(--pa);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .setup-bar {
+    background: var(--warn-bg); border: 1px solid var(--warn-border);
+    color: #92500a; padding: 12px 16px; border-radius: 10px;
+    font-size: 12px; line-height: 1.6; display: none; margin-bottom: 16px;
+  }
+  .setup-bar.show { display: block; }
+  .setup-bar strong { color: #78350f; }
+  .setup-bar a { color: #78350f; text-decoration: underline; font-weight: 600; }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+
+  .panel-registry-wrap {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 8px 8px 4px; box-shadow: var(--shadow-sm); margin-bottom: 28px; overflow-x: auto;
+  }
+  .panel-registry-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+  .panel-registry-table th {
+    text-align: right; font-size: 11px; color: var(--text-3); font-weight: 700;
+    padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .panel-registry-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .panel-registry-table tr:last-child td { border-bottom: none; }
+  .pr-num { color: var(--text-3); font-weight: 700; }
+  .pr-pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700;
+    padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pr-live { background: var(--good-bg); color: var(--good); }
+  .pr-off { background: var(--card-soft); color: var(--text-4); border: 1px solid var(--border-2); }
+  tr.pr-inactive td { color: var(--text-4); }
+  tr.pr-inactive .title-link { color: var(--text-4); }
+  tr.pr-inactive { background: var(--card-soft); }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .kpi-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .kpi-icon.purple { background: var(--pa-soft); color: var(--pa); }
+  .kpi-icon.blue { background: var(--pb-soft); color: var(--pb); }
+  .kpi-icon.green { background: var(--good-bg); color: var(--good); }
+  .kpi-icon.gold { background: var(--gold-bg); color: #b8881d; }
+  .kpi-text { flex: 1; min-width: 0; }
+  .kpi-label { font-size: 11px; color: var(--text-2); font-weight: 500; margin-bottom: 2px; }
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace; font-size: 26px;
+    font-weight: 700; line-height: 1.1; color: var(--text);
+  }
+  .kpi-sub { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+  .kpi-value.text-value {
+    font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700;
+    line-height: 1.3; white-space: normal;
+  }
+
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 32px 0 14px; flex-wrap: wrap; gap: 6px; }
+  .section-head h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .section-head .sicn {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--pa-soft); color: var(--pa);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .section-head .sicn.blue { background: var(--pb-soft); color: var(--pb); }
+  .section-head .sicn.green { background: var(--good-bg); color: var(--good); }
+  .section-head .meta { font-size: 11px; color: var(--text-3); }
+
+  .funnel-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 26px; box-shadow: var(--shadow-sm);
+  }
+  .funnel-title-row { text-align: center; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .funnel-title-row h3 { font-size: 17px; font-weight: 700; }
+  .funnel-title-row p { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+  .funnel-table { width: 100%; border-collapse: separate; border-spacing: 8px 6px; table-layout: fixed; }
+  .funnel-table col.lbl-col { width: 110px; }
+  .funnel-table th, .funnel-table td { vertical-align: middle; }
+  .funnel-table tfoot th, .funnel-table tfoot td { padding-top: 10px; }
+  .funnel-table tfoot tr { border-top: 1px solid var(--border); }
+
+  .fcol-head {
+    text-align: center; padding: 11px 6px; border-radius: 9px;
+    font-weight: 700; font-size: 13px;
+  }
+  .fcol-head .inner { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .fcol-head.label { background: transparent; color: var(--text-3); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .fcol-head.f1 { background: var(--f1-bg); color: var(--f1); border: 1px solid var(--f1-border); }
+  .fcol-head.f2 { background: var(--f2-bg); color: var(--f2); border: 1px solid var(--f2-border); }
+  .fcol-head.f3 { background: var(--f3-bg); color: var(--f3); border: 1px solid var(--f3-border); }
+  .fcol-head.f4 { background: var(--f4-bg); color: var(--f4); border: 1px solid var(--f4-border); }
+  .fcol-head .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .fcol-head.f1 .dot { background: var(--f1); }
+  .fcol-head.f2 .dot { background: var(--f2); }
+  .fcol-head.f3 .dot { background: var(--f3); }
+  .fcol-head.f4 .dot { background: var(--f4); }
+  .fstep-th { text-align: center; padding: 6px 4px; font-weight: 500; }
+  .fstep-lbl {
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 6px; font-size: 11px; color: var(--text-2); text-align: center;
+  }
+  .fstep-lbl .ic {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; color: var(--text-3);
+  }
+  .fstep-lbl .ic svg { width: 14px; height: 14px; }
+
+  .fcell {
+    background: var(--card-soft); border-radius: 9px; padding: 12px 8px 10px;
+    text-align: center; border: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .fcell.f1 { background: var(--f1-bg); border-color: var(--f1-border); }
+  .fcell.f2 { background: var(--f2-bg); border-color: var(--f2-border); }
+  .fcell.f3 { background: var(--f3-bg); border-color: var(--f3-border); }
+  .fcell.f4 { background: var(--f4-bg); border-color: var(--f4-border); }
+  .fcell.end { box-shadow: 0 0 0 2px var(--good-bg) inset; }
+  .fcell.na { opacity: .4; }
+  .fcell.na .fcell-count { color: var(--text-3); font-weight: 500; }
+  .fcell-inner { position: relative; z-index: 1; }
+  .fcell-bar-bg { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; z-index: 0; }
+  .fcell-bar-fill { position: absolute; left: 0; right: 0; bottom: 0; transition: height .6s ease; opacity: .35; }
+  .fcell.f1 .fcell-bar-fill { background: var(--f1); }
+  .fcell.f2 .fcell-bar-fill { background: var(--f2); }
+  .fcell.f3 .fcell-bar-fill { background: var(--f3); }
+  .fcell.f4 .fcell-bar-fill { background: var(--f4); }
+  .fcell-count { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--text); }
+  .fcell-pct { font-size: 10px; color: var(--text-3); margin-top: 3px; font-weight: 500; }
+  .fcell-pct.dropoff { color: var(--bad); font-weight: 600; }
+
+  .fwinner-lbl {
+    text-align: center; font-size: 10px; color: var(--text-3); letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .fwinner-cell {
+    background: var(--card-soft); border-radius: 9px;
+    padding: 12px 8px; text-align: center; border: 1px solid var(--border);
+  }
+  .fwinner-cell.is-winner {
+    background: linear-gradient(135deg, var(--gold-bg) 0%, white 100%);
+    border-color: var(--gold-border);
+  }
+  .fwinner-rate { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; }
+  .fwinner-cell.is-winner .fwinner-rate { color: #a37810; }
+  .fwinner-trophy { font-size: 15px; height: 18px; line-height: 1; }
+  .fwinner-name { font-size: 10px; color: var(--text-3); margin-top: 4px; font-weight: 500; }
+  .small-n-note { font-size: 9px; color: var(--warn); font-weight: 700; }
+  .small-n-note.head { margin-inline-start: 4px; text-transform: none; letter-spacing: 0; }
+  .fwinner-name .small-n-note { display: block; margin-top: 2px; }
+  .fw-gate-note { margin: 10px 0 18px; padding: 10px 14px; background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px; font-size: 12.5px; line-height: 1.6; color: var(--text-2); }
+
+  .ab-grid { display: grid; gap: 16px; }
+  .ab-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow-sm);
+  }
+  .ab-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+  }
+  .ab-head-left { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+  .ab-tag {
+    font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 5px;
+    background: var(--pa-soft); color: var(--pa); border: 1px solid var(--pa-border);
+  }
+  .ab-tag.landing { background: var(--pa-soft); color: var(--pa); border-color: var(--pa-border); }
+  .ab-tag.funnel { background: var(--pb-soft); color: var(--pb); border-color: var(--pb-border); }
+
+  .ab-status {
+    font-size: 11px; color: var(--good);
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--good-bg); padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--good-border); font-weight: 500;
+  }
+  .ab-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+  .ab-status.waiting { background: var(--card-soft); color: var(--text-3); border-color: var(--border); }
+  .ab-status.waiting::before { background: var(--text-3); }
+  .ab-status.pending { background: var(--warn-bg); color: #92500a; border-color: var(--warn-border); }
+  .ab-status.pending::before { background: var(--warn); }
+
+  .ab-variants-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: stretch; }
+  .ab-variant { border-radius: 12px; padding: 16px 18px; position: relative; }
+  .ab-variant.v1 { background: var(--f1-bg); border: 1px solid var(--f1-border); }
+  .ab-variant.v2 { background: var(--f2-bg); border: 1px solid var(--f2-border); }
+  .ab-variant.v3 { background: var(--f3-bg); border: 1px solid var(--f3-border); }
+  .ab-variant.v4 { background: var(--f4-bg); border: 1px solid var(--f4-border); }
+
+  .ab-var-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ab-var-badge {
+    width: 30px; height: 30px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .ab-variant.v1 .ab-var-badge { background: var(--f1); }
+  .ab-variant.v2 .ab-var-badge { background: var(--f2); }
+  .ab-variant.v3 .ab-var-badge { background: var(--f3); }
+  .ab-variant.v4 .ab-var-badge { background: var(--f4); }
+  .ab-var-name { font-size: 14px; font-weight: 700; }
+  .ab-var-desc { font-size: 11px; color: var(--text-2); margin-bottom: 14px; min-height: 32px; line-height: 1.5; }
+
+  .ab-body { display: grid; grid-template-columns: 1fr 86px; gap: 16px; align-items: center; }
+  .ab-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .ab-stat-lbl { font-size: 10px; color: var(--text-2); font-weight: 500; margin-bottom: 2px; }
+  .ab-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--text); }
+  .ab-stat-val.rate-v1 { color: var(--f1); }
+  .ab-stat-val.rate-v2 { color: var(--f2); }
+  .ab-stat-val.rate-v3 { color: var(--f3); }
+  .ab-stat-val.rate-v4 { color: var(--f4); }
+
+  .ab-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
+  .ab-ring svg { transform: rotate(-90deg); }
+  .ab-ring-track { fill: none; stroke-width: 8; stroke: white; }
+  .ab-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .ab-variant.v1 .ab-ring-fill { stroke: var(--f1); }
+  .ab-variant.v2 .ab-ring-fill { stroke: var(--f2); }
+  .ab-variant.v3 .ab-ring-fill { stroke: var(--f3); }
+  .ab-variant.v4 .ab-ring-fill { stroke: var(--f4); }
+  .ab-ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .ab-ring-center .num { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; }
+  .ab-variant.v1 .ab-ring-center .num { color: var(--f1); }
+  .ab-variant.v2 .ab-ring-center .num { color: var(--f2); }
+  .ab-variant.v3 .ab-ring-center .num { color: var(--f3); }
+  .ab-variant.v4 .ab-ring-center .num { color: var(--f4); }
+  .ab-ring-sub { text-align: center; font-size: 9px; color: var(--text-3); margin-top: 4px; font-weight: 500; }
+
+  .ab-winner-pill {
+    position: absolute; top: -10px; left: 14px;
+    background: linear-gradient(135deg, #f5cf52 0%, #d4a72c 100%);
+    color: #5a4205; font-size: 10px; font-weight: 700;
+    padding: 3px 9px; border-radius: 5px; letter-spacing: 0.03em;
+    box-shadow: var(--shadow-md);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .ab-no-traffic-badge {
+    display: inline-flex; align-items: center; vertical-align: middle;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.02em;
+    background: var(--card-soft); color: var(--text-3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 7px; margin-right: 6px;
+  }
+
+  .ph-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 4px; }
+  .ph-card {
+    background: var(--card-soft); border: 1px solid var(--border-2);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .ph-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .ph-card-head .pr-num { font-size: 11px; }
+  .ph-card-head .title-link { font-size: 13.5px; font-weight: 700; }
+  .ph-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ph-stat-lbl { display: block; font-size: 9px; color: var(--text-3); margin-bottom: 2px; }
+  .ph-stat-val { display: block; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--text); }
+  .ph-stat-val.rate { color: var(--pa); }
+  .ph-empty { font-size: 12.5px; color: var(--text-3); padding: 6px 2px; grid-column: 1 / -1; }
+
+  .title-link { color: inherit; text-decoration: none; }
+  .title-link:hover { text-decoration: underline; }
+
+  .toast {
+    position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+    background: white; border: 1px solid var(--good-border);
+    color: var(--good); padding: 10px 18px;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+    z-index: 100; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; box-shadow: var(--shadow-lg);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .toast::before { content: '✓'; }
+  .toast.show { opacity: 1; }
+
+  .loading-dots::after { content: '...'; animation: dots 1.4s steps(4, end) infinite; }
+  @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+
+  @media (max-width: 960px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    main { padding: 20px 16px 40px; }
+  }
+  @media (max-width: 700px) {
+    .funnel-table { border-spacing: 4px; }
+    .funnel-table col.lbl-col { width: 70px; }
+    .fcell { padding: 8px 4px; }
+    .fcell-count { font-size: 14px; }
+    .fcell-pct { font-size: 9px; }
+    .fcol-head { font-size: 10px; padding: 6px 3px; }
+    .fstep-lbl { font-size: 9px; }
+    .ab-body { grid-template-columns: 1fr; text-align: center; }
+    .ab-ring { margin: 0 auto; }
+    .funnel-wrap { padding: 14px; overflow-x: auto; }
+    .ab-card { padding: 16px; }
+    header.top { padding: 12px 16px; flex-wrap: wrap; row-gap: 10px; }
+    .page-title h1 { font-size: 18px; }
+    .header-right { gap: 8px; }
+    .sync-pill { font-size: 10px; padding: 5px 9px; }
+    .btn-refresh { padding: 7px 11px; font-size: 11px; }
+    .section-head { flex-direction: column; align-items: flex-start; gap: 4px; margin: 26px 0 12px; }
+    .section-head .meta { text-align: right; }
+    .panel-registry-wrap { padding: 14px 14px 10px; overflow-x: auto; }
+  }
+  @media (max-width: 480px) {
+    main { padding: 16px 12px 32px; }
+    .kpi-strip { grid-template-columns: 1fr; gap: 12px; }
+    .kpi { padding: 15px 16px; }
+    .kpi-value { font-size: 22px; }
+    header.top { gap: 10px; }
+    .brand-icon { width: 30px; height: 30px; font-size: 12px; }
+    .brand-text .name { font-size: 14px; }
+    .brand-text .sub { font-size: 10px; }
+    .header-right { margin-right: 0; width: 100%; justify-content: space-between; }
+    .btn-refresh span.btn-refresh-label { display: none; }
+    .page-title h1 { font-size: 17px; gap: 8px; }
+    .page-title-icon { width: 26px; height: 26px; }
+    .panel-registry-table { font-size: 11.5px; }
+    .panel-registry-table th, .panel-registry-table td { padding: 8px 8px; }
+    .funnel-title-row h3 { font-size: 14.5px; }
+    .funnel-title-row p { font-size: 10px; }
+    .ab-head { flex-direction: column; align-items: flex-start; }
+    .ab-var-desc { min-height: 0; }
+    .ph-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    .toast { top: auto; bottom: 20px; left: 12px; right: 12px; transform: none; text-align: center; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="brand-icon">NT</div>
+    <div class="brand-text">
+      <div class="name">A/B Optimize</div>
+      <div class="sub">NewTech · ניהול ביצועים</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="sync-pill" id="syncText" role="status" aria-live="polite"><span class="loading-dots">טוען</span></span>
+    <button class="btn-refresh" id="refreshBtn" type="button">
+      <svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
+      רענן נתונים
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <div class="page-title">
+    <h1>
+      <span class="page-title-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      סיכום ביצועי משפך
+    </h1>
+  </div>
+
+  <div class="setup-bar" id="setupBar">
+    ⚠️ <strong>נדרש שלב חיבור:</strong> פתח את הגיליון, לחץ <strong>Share → Anyone with link → Viewer</strong>, ולחץ רענן.
+    <a id="sheetLink" href="#" target="_blank">פתח גיליון ↗</a>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-icon purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">סה״כ כניסות לדפי הנחיתה</div>
+        <div class="kpi-value mono" id="kpi_entries">0</div>
+        <div class="kpi-sub">4 דפי נחיתה · עברית + ערבית</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-icon blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">סה״כ לידים שהשאירו פרטים</div>
+        <div class="kpi-value mono" id="kpi_leads">0</div>
+        <div class="kpi-sub">דף נחיתה + השלמת שאלון</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-icon green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">אחוז המרה כולל</div>
+        <div class="kpi-value mono" id="kpi_rate" style="color: var(--good);">0.0%</div>
+        <div class="kpi-sub">מכניסה לדף נחיתה עד שליחת ליד</div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-icon gold">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">הגרסה המובילה</div>
+        <div class="kpi-value text-value" id="kpi_top" style="color: #b8881d;">—</div>
+        <div class="kpi-sub" id="kpi_top_sub">אין עדיין מספיק נתונים</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn" style="background:var(--pb-soft);color:var(--pb);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </span>
+      דפי נחיתה שנוצרו אי פעם
+    </h2>
+    <span class="meta">כולל כאלה שאינם פעילים כרגע · שורות אפורות עם התג "לא פעיל" לא מקבלות תנועה חדשה, אך הנתונים ההיסטוריים שלהן נשארים כאן</span>
+  </div>
+
+  <div class="panel-registry-wrap">
+    <table class="panel-registry-table" aria-label="דפי נחיתה שנוצרו אי פעם">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">שם</th>
+          <th scope="col">סטטוס</th>
+          <th scope="col">כניסות</th>
+          <th scope="col">המרות</th>
+          <th scope="col">אחוז המרה</th>
+        </tr>
+      </thead>
+      <tbody id="panel_registry_landing_body"></tbody>
+    </table>
+  </div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn" style="background:var(--pb-soft);color:var(--pb);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      </span>
+      משפכים (פאנל וידאו + שאלון) שנוצרו אי פעם
+    </h2>
+    <span class="meta">כולל כאלה שאינם פעילים כרגע · שורות אפורות עם התג "לא פעיל" לא מקבלות תנועה חדשה, אך הנתונים ההיסטוריים שלהן נשארים כאן</span>
+  </div>
+
+  <div class="panel-registry-wrap">
+    <table class="panel-registry-table" aria-label="משפכים שנוצרו אי פעם">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">שם</th>
+          <th scope="col">סטטוס</th>
+          <th scope="col">כניסות</th>
+          <th scope="col">המרות</th>
+          <th scope="col">אחוז המרה</th>
+        </tr>
+      </thead>
+      <tbody id="panel_registry_funnel_body"></tbody>
+    </table>
+  </div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      </span>
+      השוואת משפכים · 4 הגרסאות הפעילות
+    </h2>
+    <span class="meta">כניסה לפאנל הווידאו ← התחלת שאלון ← השלמת שאלון ושליחת פרטים · האחוז בכל שורה = כמה מהכניסות הגיעו לשלב הזה</span>
+  </div>
+
+  <div class="funnel-wrap">
+    <div class="funnel-title-row">
+      <h3 id="funnelCaption">משפך המרות · פאנל A/B · עברית וערבית</h3>
+      <p>כל דף נחיתה מפנה את הלידים לפאנל הווידאו התואם, ומשם לשאלון מיפוי בן 5 שאלות</p>
+    </div>
+
+    <table class="funnel-table" aria-labelledby="funnelCaption">
+      <colgroup>
+        <col class="lbl-col"/>
+        <col/><col/><col/><col/>
+      </colgroup>
+      <thead>
+        <tr id="funnel_head_row">
+          <th scope="col" class="fcol-head label">שלב</th>
+        </tr>
+      </thead>
+      <tbody id="funnel_steps"></tbody>
+      <tfoot>
+        <tr id="funnel_winners_row">
+          <th scope="row" class="fwinner-lbl">המרה סופית</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn green">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </span>
+      מבחני A/B · דף נחיתה ומשפך
+    </h2>
+    <span class="meta">שליחת הפרטים היא המדד הסופי</span>
+  </div>
+
+  <div class="ab-grid" id="ab_grid"></div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn" style="background:var(--card-soft);color:var(--text-3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </span>
+      היסטוריה · דפי נחיתה
+    </h2>
+    <span class="meta">כל דפי הנחיתה שאינם פעילים כרגע, עם כל הנתונים שנאספו עבורם — שום דבר לא נמחק</span>
+  </div>
+
+  <div class="ph-grid" id="ph_landing_grid"></div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn" style="background:var(--card-soft);color:var(--text-3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      </span>
+      היסטוריה · משפכים
+    </h2>
+    <span class="meta">כל המשפכים שאינם פעילים כרגע, עם כל הנתונים שנאספו עבורם — שום דבר לא נמחק</span>
+  </div>
+
+  <div class="ph-grid" id="ph_funnel_grid"></div>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite">הנתונים עודכנו</div>
+
+<script>
+/* ============================================================================
+   CONFIG · ONE THING TO CHANGE WHEN YOU CONNECT THE SHEET
+   ============================================================================
+   This dashboard reads a public Google Sheet the same way as the reference
+   it was modeled on: a "Dashboard" tab, column A = metric ID, column C =
+   value, fetched client-side via the Sheets gviz JSON endpoint (no API key,
+   no backend). Until a real sheet is connected it shows the setup banner
+   below and zeros everywhere -- deliberately, so it never shows a fake
+   number instead of admitting nothing is wired up yet. */
+
+const SHEET_ID  = 'PASTE_SHEET_ID_HERE';   // ← put the Google Sheet ID here
+const SHEET_TAB = 'Dashboard';             // ← tab name (default 'Dashboard')
+
+const SITE_BASE = 'https://ai-practitioner.newtech-academy.com/';
+
+/* Every landing page and funnel (panel + quiz) NewTech has ever shipped.
+   type: 'landing' = direct entry point (safe to share as a marketing link).
+   type: 'funnel'  = the panel+quiz a visitor reaches AFTER submitting a
+   landing-page form -- not meant to be shared directly, listed here so the
+   panel numbers are traceable. */
+const PANEL_LEGEND = [
+  { panel: 1, name: 'Landing A · עברית',  type: 'landing', path: 'landing-a.html' },
+  { panel: 2, name: 'Landing B · עברית',  type: 'landing', path: 'landing-b.html' },
+  { panel: 3, name: 'Landing A · ערבית',  type: 'landing', path: 'landing-a-ar.html' },
+  { panel: 4, name: 'Landing B · ערבית',  type: 'landing', path: 'landing-b-ar.html' },
+  { panel: 5, name: 'פאנל A · עברית (וידאו + שאלון)', type: 'funnel', path: 'landing-pages/panel_a.html' },
+  { panel: 6, name: 'פאנל B · עברית (וידאו + שאלון)', type: 'funnel', path: 'landing-pages/panel_b.html' },
+  { panel: 7, name: 'פאנל A · ערבית (וידאו + שאלון)', type: 'funnel', path: 'landing-pages/ar/panel_a.html' },
+  { panel: 8, name: 'פאנל B · ערבית (וידאו + שאלון)', type: 'funnel', path: 'landing-pages/ar/panel_b.html' }
+];
+
+// All 8 panels are currently live -- update this set the day any of them
+// stop receiving new traffic (they'll then show up in the "לא פעיל" /
+// history sections automatically, same as the reference dashboard).
+const ACTIVE_PANELS = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+
+/* Head-to-head A/B tests actually running on the site right now. */
+const HEAD_TO_HEAD_TESTS = [
+  {
+    title: 'דף נחיתה · Landing A מול Landing B (עברית)', tag: 'landing', tagLabel: 'דף נחיתה · פעיל',
+    conversionLabel: 'שלחו פרטים', conversionKey: 'landing',
+    variants: [
+      { name: 'Landing A', desc: 'בעוד שנתיים AI יהיה בסיסי...', panel: 1 },
+      { name: 'Landing B', desc: 'העולם כבר עבר לשלב הבא עם AI...', panel: 2 }
+    ]
+  },
+  {
+    title: 'דף נחיתה · Landing A מול Landing B (ערבית)', tag: 'landing', tagLabel: 'דף נחיתה · פעיל',
+    conversionLabel: 'שלחו פרטים', conversionKey: 'landing',
+    variants: [
+      { name: 'Landing A', desc: 'גרסה ערבית של Landing A', panel: 3 },
+      { name: 'Landing B', desc: 'גרסה ערבית של Landing B', panel: 4 }
+    ]
+  },
+  {
+    title: 'משפך (פאנל + שאלון) · A מול B (עברית)', tag: 'funnel', tagLabel: 'משפך · פעיל',
+    conversionLabel: 'השלימו שאלון', conversionKey: 'quiz_completed',
+    robustBase: true,
+    variants: [
+      { name: 'פאנל A', desc: 'פאנל וידאו + שאלון מיפוי (עברית)', panel: 5 },
+      { name: 'פאנל B', desc: 'פאנל וידאו + שאלון מיפוי (עברית)', panel: 6 }
+    ]
+  },
+  {
+    title: 'משפך (פאנל + שאלון) · A מול B (ערבית)', tag: 'funnel', tagLabel: 'משפך · פעיל',
+    conversionLabel: 'השלימו שאלון', conversionKey: 'quiz_completed',
+    robustBase: true,
+    variants: [
+      { name: 'פאנל A', desc: 'פאנל וידאו + שאלון מיפוי (ערבית)', panel: 7 },
+      { name: 'פאנל B', desc: 'פאנל וידאו + שאלון מיפוי (ערבית)', panel: 8 }
+    ]
+  }
+];
+
+/* The 4-column funnel step table (f1..f4 = the 4 funnel panels). */
+const FUNNEL_GROUPS = [
+  { id: 'p5', cls: 'f1', label: 'פאנל A · עברית', panels: ['5'] },
+  { id: 'p6', cls: 'f2', label: 'פאנל B · עברית', panels: ['6'] },
+  { id: 'p7', cls: 'f3', label: 'פאנל A · ערבית', panels: ['7'] },
+  { id: 'p8', cls: 'f4', label: 'פאנל B · ערבית', panels: ['8'] }
+];
+
+const FUNNEL_STEPS = [
+  { key: 'entry',          label: 'הגיעו לפאנל הווידאו',            icon: 'play' },
+  { key: 'quiz_start',     label: 'התחילו את השאלון',               icon: 'doc' },
+  { key: 'quiz_completed', label: 'השלימו ושלחו פרטים',             icon: 'check', isEnd: true }
+];
+
+const ICONS = {
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+  doc:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  play:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>'
+};
+
+/* ============================================================================
+   HELPERS
+   ============================================================================ */
+
+const num = v => {
+  if (v == null || v === '') return 0;
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''));
+  return isNaN(n) ? 0 : n;
+};
+const pct = (n, d) => d === 0 ? 0 : (n / d * 100);
+const fmt = n => n == null || isNaN(n) ? '0' : Math.round(n).toLocaleString('en-US');
+const fmtPct = n => isNaN(n) ? '0.0%' : n.toFixed(1) + '%';
+
+let metrics = {};
+function m(id) { return num(metrics[id]); }
+function panelUrl(panelNum) {
+  const p = PANEL_LEGEND.find(x => x.panel === Number(panelNum));
+  return p ? SITE_BASE + p.path : '#';
+}
+
+/* ============================================================================
+   FETCH
+   ============================================================================ */
+
+async function loadData() {
+  const syncText = document.getElementById('syncText');
+  const setupBar = document.getElementById('setupBar');
+  const sheetLink = document.getElementById('sheetLink');
+
+  if (SHEET_ID === 'PASTE_SHEET_ID_HERE') {
+    setupBar.classList.add('show');
+    setupBar.innerHTML = '⚠️ <strong>הדשבורד עדיין לא מחובר למקור נתונים.</strong> יש ליצור גיליון Google Sheets עם לשונית בשם "Dashboard" (עמודה A = מזהה מדד, עמודה C = ערך), לעדכן את SHEET_ID בקוד הדף, ולוודא שהאתר שולח את הנתונים לגיליון הזה.';
+    syncText.textContent = 'לא מחובר';
+    syncText.classList.add('err');
+    render();
+    return;
+  }
+
+  sheetLink.href = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+  syncText.innerHTML = '<span class="loading-dots">מרענן</span>';
+  syncText.classList.remove('err');
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}&t=${Date.now()}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+    if (!match) throw new Error('Sheet not accessible');
+    const json = JSON.parse(match[1]);
+    if (json.status === 'error') throw new Error((json.errors && json.errors[0] && json.errors[0].detailed_message) || 'Query error');
+
+    const freshMetrics = {};
+    (json.table.rows || []).forEach(row => {
+      const cells = row.c || [];
+      const id = cells[0] && cells[0].v != null ? String(cells[0].v).trim() : '';
+      const value = cells[2] && cells[2].v != null ? cells[2].v : '';
+      if (id) freshMetrics[id] = value;
+    });
+    metrics = freshMetrics;
+
+    setupBar.classList.remove('show');
+    syncText.textContent = 'עודכן ' + new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute: '2-digit'});
+    render();
+  } catch (e) {
+    setupBar.classList.add('show');
+    setupBar.innerHTML = '⚠️ <strong>הרענון האחרון נכשל — מוצגים הנתונים מהסנכרון הקודם.</strong> ' +
+      'ודא שהגיליון משותף עם <strong>Share → Anyone with link → Viewer</strong>, ואז לחץ רענן. ' +
+      '<a href="' + sheetLink.href + '" target="_blank">פתח גיליון ↗</a>';
+    syncText.textContent = 'שגיאת חיבור — מציג נתונים ישנים';
+    syncText.classList.add('err');
+    console.error(e);
+    render();
+  }
+}
+
+/* ============================================================================
+   RENDER
+   ============================================================================ */
+
+function render() {
+  let entriesAll = 0, leadsAll = 0;
+  let topPanel = null, topRate = -1;
+
+  PANEL_LEGEND.filter(p => p.type === 'landing').forEach(p => {
+    const entries = m(`f${p.panel}_entry`);
+    const conv = m(`f${p.panel}_landing`);
+    entriesAll += entries;
+    leadsAll += conv;
+    const rate = pct(conv, entries);
+    if (entries >= 10 && rate > topRate) { topRate = rate; topPanel = p; }
+  });
+  // Quiz completions also count as leads (contact re-confirmed + submitted).
+  PANEL_LEGEND.filter(p => p.type === 'funnel').forEach(p => {
+    leadsAll += m(`f${p.panel}_quiz_completed`);
+  });
+
+  document.getElementById('kpi_entries').textContent = fmt(entriesAll);
+  document.getElementById('kpi_leads').textContent = fmt(leadsAll);
+  document.getElementById('kpi_rate').textContent = fmtPct(pct(leadsAll, entriesAll));
+
+  const kpiTopEl = document.getElementById('kpi_top');
+  const kpiTopSubEl = document.getElementById('kpi_top_sub');
+  if (!topPanel) {
+    kpiTopEl.textContent = '—';
+    kpiTopEl.style.color = '#b8881d';
+    kpiTopSubEl.textContent = 'אין עדיין מספיק נתונים';
+  } else {
+    kpiTopEl.textContent = topPanel.name;
+    kpiTopEl.style.color = 'var(--pa)';
+    kpiTopSubEl.textContent = `${fmtPct(topRate)} אחוז המרה`;
+  }
+
+  renderPanelRegistry();
+  renderPanelHistory();
+  renderFunnelComparison();
+  renderHeadToHead();
+}
+
+/* ============================================================================
+   PANEL REGISTRY
+   ============================================================================ */
+
+function renderPanelRegistryRow(p) {
+  const isActive = ACTIVE_PANELS.has(p.panel);
+  const entries = m(`f${p.panel}_entry`);
+  const conv = p.type === 'funnel' ? m(`f${p.panel}_quiz_completed`) : m(`f${p.panel}_landing`);
+  const rate = pct(conv, entries);
+  const statusPill = isActive
+    ? '<span class="pr-pill pr-live">🟢 פעיל · מקבל תנועה</span>'
+    : '<span class="pr-pill pr-off">⚪ לא פעיל · לא מוזרמת תנועה</span>';
+  return `
+    <tr class="${isActive ? '' : 'pr-inactive'}">
+      <td class="pr-num mono">${p.panel}</td>
+      <td><a class="title-link" href="${SITE_BASE + p.path}" target="_blank" rel="noopener">${p.name}</a></td>
+      <td>${statusPill}</td>
+      <td class="mono">${fmt(entries)}</td>
+      <td class="mono">${fmt(conv)}</td>
+      <td class="mono">${fmtPct(rate)}</td>
+    </tr>`;
+}
+
+function renderPanelRegistry() {
+  const landingBody = document.getElementById('panel_registry_landing_body');
+  const funnelBody = document.getElementById('panel_registry_funnel_body');
+  if (landingBody) landingBody.innerHTML = PANEL_LEGEND.filter(p => p.type === 'landing').map(renderPanelRegistryRow).join('');
+  if (funnelBody) funnelBody.innerHTML = PANEL_LEGEND.filter(p => p.type === 'funnel').map(renderPanelRegistryRow).join('');
+}
+
+function renderPanelHistoryCard(p) {
+  const entries = m(`f${p.panel}_entry`);
+  const conv = p.type === 'funnel' ? m(`f${p.panel}_quiz_completed`) : m(`f${p.panel}_landing`);
+  const rate = pct(conv, entries);
+  return `
+    <div class="ph-card">
+      <div class="ph-card-head">
+        <span class="pr-num mono">${p.panel}</span>
+        <a class="title-link" href="${SITE_BASE + p.path}" target="_blank" rel="noopener">${p.name}</a>
+      </div>
+      <div class="ph-stats">
+        <div><span class="ph-stat-lbl">כניסות</span><span class="ph-stat-val">${fmt(entries)}</span></div>
+        <div><span class="ph-stat-lbl">המרות</span><span class="ph-stat-val">${fmt(conv)}</span></div>
+        <div><span class="ph-stat-lbl">אחוז המרה</span><span class="ph-stat-val rate">${fmtPct(rate)}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderPanelHistory() {
+  const landingGrid = document.getElementById('ph_landing_grid');
+  const funnelGrid = document.getElementById('ph_funnel_grid');
+  const inactiveLanding = PANEL_LEGEND.filter(p => p.type === 'landing' && !ACTIVE_PANELS.has(p.panel));
+  const inactiveFunnel = PANEL_LEGEND.filter(p => p.type === 'funnel' && !ACTIVE_PANELS.has(p.panel));
+  if (landingGrid) landingGrid.innerHTML = inactiveLanding.length ? inactiveLanding.map(renderPanelHistoryCard).join('') : '<p class="ph-empty">אין כרגע דפי נחיתה לא פעילים.</p>';
+  if (funnelGrid) funnelGrid.innerHTML = inactiveFunnel.length ? inactiveFunnel.map(renderPanelHistoryCard).join('') : '<p class="ph-empty">אין כרגע משפכים לא פעילים.</p>';
+}
+
+/* ============================================================================
+   FUNNEL COMPARISON (4 columns, f1..f4)
+   ============================================================================ */
+
+function groupSum(group, metricKey) {
+  return group.panels.reduce((sum, p) => sum + m(`f${p}_${metricKey}`), 0);
+}
+function groupBase(group) {
+  return groupSum(group, 'entry');
+}
+
+function renderFunnelComparison() {
+  const headRow = document.getElementById('funnel_head_row');
+  const winnersRow = document.getElementById('funnel_winners_row');
+  const body = document.getElementById('funnel_steps');
+  if (!body) return;
+
+  headRow.innerHTML = '<th scope="col" class="fcol-head label">שלב</th>' + FUNNEL_GROUPS.map(g =>
+    `<th scope="col" class="fcol-head ${g.cls}"><span class="inner"><span class="dot" aria-hidden="true"></span> <a class="title-link" href="${panelUrl(g.panels[0])}" target="_blank" rel="noopener">${g.label}</a></span></th>`
+  ).join('');
+
+  const prevPct = {};
+  FUNNEL_GROUPS.forEach(g => { prevPct[g.id] = 100; });
+
+  let html = '';
+  FUNNEL_STEPS.forEach(step => {
+    html += `<tr><th scope="row" class="fstep-th"><span class="fstep-lbl"><span class="ic">${ICONS[step.icon] || ''}</span><span>${step.label}</span></span></th>`;
+    FUNNEL_GROUPS.forEach(group => {
+      const count = groupSum(group, step.key);
+      const entryCount = groupBase(group);
+      const pOfEntry = entryCount > 0 ? Math.min(100, pct(count, entryCount)) : 0;
+      let pctText = '', pctClass = '';
+      if (entryCount > 0) {
+        pctText = `${pOfEntry.toFixed(1)}% מהכניסות`;
+        const drop = prevPct[group.id] - pOfEntry;
+        if (drop >= 20 && prevPct[group.id] > 5) pctClass = 'dropoff';
+      }
+      prevPct[group.id] = pOfEntry;
+      const endClass = step.isEnd ? 'end' : '';
+      const barHeight = Math.round(pOfEntry);
+      html += `<td class="fcell ${group.cls} ${endClass}">
+        <div class="fcell-bar-bg"><div class="fcell-bar-fill" style="height:${barHeight}%"></div></div>
+        <div class="fcell-inner">
+          <div class="fcell-count">${fmt(count)}</div>
+          ${pctText ? `<div class="fcell-pct ${pctClass}">${pctText}</div>` : ''}
+        </div>
+      </td>`;
+    });
+    html += '</tr>';
+  });
+  body.innerHTML = html;
+
+  let bestRate = -1, bestGroupKey = null;
+  FUNNEL_GROUPS.forEach(group => {
+    const entry = groupBase(group);
+    const conv = groupSum(group, 'quiz_completed');
+    const r = pct(conv, entry);
+    if (entry >= 10 && r > bestRate) { bestRate = r; bestGroupKey = group.id; }
+  });
+
+  winnersRow.innerHTML = '<th scope="row" class="fwinner-lbl">המרה סופית</th>' + FUNNEL_GROUPS.map(group => {
+    const entry = groupBase(group);
+    const conv = groupSum(group, 'quiz_completed');
+    const rate = pct(conv, entry);
+    const isWinner = bestGroupKey === group.id;
+    const smallSample = entry < 10;
+    return `<td class="fwinner-cell ${isWinner ? 'is-winner' : ''}">
+      <div class="fwinner-trophy" aria-hidden="true">${isWinner ? '🏆' : ''}</div>
+      <div class="fwinner-rate mono">${fmtPct(rate)}</div>
+      <div class="fwinner-name"><a class="title-link" href="${panelUrl(group.panels[0])}" target="_blank" rel="noopener">${group.label}</a>
+        ${smallSample ? `<span class="small-n-note">מדגם קטן (${fmt(entry)} כניסות)</span>` : ''}
+      </div>
+    </td>`;
+  }).join('');
+}
+
+/* ============================================================================
+   HEAD-TO-HEAD A/B CARDS
+   ============================================================================ */
+
+function renderHeadToHead() {
+  const container = document.getElementById('ab_grid');
+  if (!container) return;
+  container.innerHTML = HEAD_TO_HEAD_TESTS.map(renderHeadToHeadCard).join('');
+}
+
+function renderHeadToHeadCard(test) {
+  const convKey = test.conversionKey || 'landing';
+
+  const variants = test.variants.map((v, i) => {
+    const sent = m(`f${v.panel}_entry`);
+    const conv = m(`f${v.panel}_${convKey}`);
+    return Object.assign({}, v, { sent, conv, rate: pct(conv, sent), vClass: 'v' + (i + 1) });
+  });
+
+  const eligible = variants.filter(v => v.sent >= 10);
+  let winnerPanel = null;
+  if (eligible.length >= 2) {
+    const sorted = eligible.slice().sort((a, b) => b.rate - a.rate);
+    if (sorted[0].rate - sorted[1].rate >= 0.5) winnerPanel = sorted[0].panel;
+  }
+
+  let statusText, statusClass;
+  if (!variants.some(v => v.sent > 0)) { statusText = 'מחכה לנתונים'; statusClass = 'waiting'; }
+  else if (eligible.length < variants.length) { statusText = 'אוסף דגימות'; statusClass = 'pending'; }
+  else { statusText = 'פעיל'; statusClass = ''; }
+
+  const RING_R = 34;
+  const CIRC = 2 * Math.PI * RING_R;
+
+  const cardsHtml = variants.map(v => {
+    const off = CIRC - (Math.min(v.rate, 100) / 100) * CIRC;
+    const isWinner = winnerPanel === v.panel;
+    return `
+      <div class="ab-variant ${v.vClass}">
+        ${isWinner ? '<div class="ab-winner-pill">🏆 מנצח</div>' : ''}
+        <div class="ab-var-head">
+          <div class="ab-var-badge">${v.panel}</div>
+          <div class="ab-var-name"><a class="title-link" href="${panelUrl(v.panel)}" target="_blank" rel="noopener">${v.name}</a></div>
+        </div>
+        <div class="ab-var-desc">${v.desc || '&nbsp;'}</div>
+        <div class="ab-body">
+          <div class="ab-stats">
+            <div><div class="ab-stat-lbl">כניסות</div><div class="ab-stat-val mono">${fmt(v.sent)}</div></div>
+            <div><div class="ab-stat-lbl">${test.conversionLabel}</div><div class="ab-stat-val mono">${fmt(v.conv)}</div></div>
+            <div><div class="ab-stat-lbl">שיעור המרה</div><div class="ab-stat-val mono rate-${v.vClass}">${fmtPct(v.rate)}</div></div>
+          </div>
+          <div>
+            <div class="ab-ring">
+              <svg width="86" height="86" aria-hidden="true" focusable="false">
+                <circle class="ab-ring-track" cx="43" cy="43" r="${RING_R}"/>
+                <circle class="ab-ring-fill" cx="43" cy="43" r="${RING_R}" stroke-dasharray="${CIRC}" stroke-dashoffset="${off}"/>
+              </svg>
+              <div class="ab-ring-center"><div class="num">${fmtPct(v.rate)}</div></div>
+            </div>
+            <div class="ab-ring-sub">(${fmt(v.conv)} ${test.conversionLabel})</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="ab-card">
+      <div class="ab-head">
+        <div class="ab-head-left">
+          <span class="ab-tag ${test.tag}">${test.tagLabel}</span>
+          <span>${test.title}</span>
+        </div>
+        <div class="ab-status ${statusClass}">${statusText}</div>
+      </div>
+      <div class="ab-variants-grid">${cardsHtml}</div>
+    </div>`;
+}
+
+const refreshBtn = document.getElementById('refreshBtn');
+const toast = document.getElementById('toast');
+refreshBtn.addEventListener('click', async () => {
+  refreshBtn.classList.add('spinning');
+  await loadData();
+  refreshBtn.classList.remove('spinning');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+});
+
+setInterval(() => loadData(), 5 * 60 * 1000);
+loadData();
+</script>
+
+</body>
+</html>
