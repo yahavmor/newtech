@@ -103,8 +103,49 @@
   .setup-bar.show { display: block; }
   .setup-bar strong { color: #78350f; }
   .setup-bar a { color: #78350f; text-decoration: underline; font-weight: 600; }
+  .setup-bar.info { background: var(--pa-softer); border-color: var(--pa-border); color: var(--pa-2); }
+  .setup-bar.info strong { color: var(--pa-2); }
+  .setup-bar.info a { color: var(--pa-2); }
 
   .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+
+  /* Ad campaign funnel · banner -> click -> landing page -> lead */
+  .cf-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 26px; box-shadow: var(--shadow-sm); margin-bottom: 28px;
+  }
+  .cf-stage-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .cf-stage-label { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 700; color: var(--text); }
+  .cf-stage-ic {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    background: var(--pa-soft); color: var(--pa);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cf-stage-ic svg { width: 14px; height: 14px; }
+  .cf-stage-count { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text); }
+  .cf-bar-track {
+    background: var(--card-soft); border: 1px solid var(--border);
+    border-radius: 8px; height: 32px; overflow: hidden;
+  }
+  .cf-bar-fill {
+    height: 100%; min-width: 0; border-radius: 8px 0 0 8px;
+    background: linear-gradient(90deg, var(--pa-2), var(--pa));
+    transition: width .6s ease;
+  }
+  .cf-stage.is-end .cf-bar-fill { background: linear-gradient(90deg, #0d9668, var(--good)); }
+  .cf-stage-sub { font-size: 10.5px; color: var(--text-3); margin-top: 6px; }
+  .cf-connector {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 2px 10px 6px; margin: 2px 0 2px 14px;
+    border-inline-start: 2px dashed var(--border-2);
+  }
+  .cf-connector-pct {
+    font-size: 12px; font-weight: 700; color: var(--pa);
+    background: var(--pa-soft); border: 1px solid var(--pa-border);
+    padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .cf-connector-pct.bad { color: #92500a; background: var(--warn-bg); border-color: var(--warn-border); }
+  .cf-connector-note { font-size: 11px; color: var(--text-3); }
 
   .panel-registry-wrap {
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
@@ -452,6 +493,85 @@
     <a id="sheetLink" href="#" target="_blank">פתח גיליון ↗</a>
   </div>
 
+  <div class="section-head" style="margin-top:0;">
+    <h2>
+      <span class="sicn" style="background:var(--pa-soft);color:var(--pa);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </span>
+      משפך קמפיין הפרסום המלא · מהבאנר ועד הליד
+    </h2>
+    <span class="meta">כל שלב במשפך מוצג כיחידה נפרדת · מהחשיפה בבאנר ועד השארת הפרטים בפועל</span>
+  </div>
+
+  <div class="setup-bar show info">
+    ℹ️ <strong>Spend, Impressions ו-Clicks מוזנים כרגע ידנית</strong> (טרם חובר API אמיתי ל-Ads Manager) — עדכנו את שלוש השורות בגיליון (<span class="mono">ad_spend</span> / <span class="mono">ad_impressions</span> / <span class="mono">ad_clicks</span>) בכל פעם שרוצים לרענן את הנתונים. שאר הנתונים במשפך (הגעה לדף, השארת פרטים) הם נתונים אמיתיים הנמדדים בזמן אמת מהאתר.
+    <a id="adSheetLink" href="#" target="_blank">פתח את הגיליון לעדכון ↗</a>
+  </div>
+
+  <div class="kpi-strip" id="ad_kpi_strip">
+    <div class="kpi">
+      <div class="kpi-icon purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">הוצאה כוללת (Spend)</div>
+        <div class="kpi-value mono" id="ad_kpi_spend">—</div>
+        <div class="kpi-sub">סה״כ כסף שהוצא בפועל על הקמפיין</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">עלות לקליק (CPC)</div>
+        <div class="kpi-value mono" id="ad_kpi_cpc">—</div>
+        <div class="kpi-sub">Spend חלקי סה״כ קליקים</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon gold">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">עלות לליד (CPL)</div>
+        <div class="kpi-value mono" id="ad_kpi_cpl">—</div>
+        <div class="kpi-sub">Spend חלקי סה״כ לידים בפועל</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div class="kpi-text">
+        <div class="kpi-label">CTR הבאנר</div>
+        <div class="kpi-value mono" id="ad_kpi_ctr" style="color: var(--good);">0.0%</div>
+        <div class="kpi-sub">קליקים חלקי חשיפות</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cf-wrap">
+    <div class="funnel-title-row" style="margin-bottom:18px;">
+      <h3>שלבי המשפך · מחשיפה בבאנר ועד ליד סופי</h3>
+      <p>רוחב הפס מייצג את היקף השלב ביחס לחשיפות הבאנר · האחוזים בין השלבים = שיעור המעבר המדויק</p>
+    </div>
+    <div id="ad_funnel_stages"></div>
+    <p style="font-size:10.5px;color:var(--text-3);margin-top:14px;line-height:1.7;">
+      * "הגיעו לדף הנחיתה" ו"השאירו פרטים" הם נתונים אמיתיים הנמדדים מהאתר בזמן אמת. ייתכן שהם כוללים גם תנועה שאינה מגיעה מהבאנר הזה (למשל שיתופים ישירים) — עד לחיבור תיוג UTM ייעודי לקמפיין.
+    </p>
+  </div>
+
+  <div class="section-head">
+    <h2>
+      <span class="sicn" style="background:var(--card-soft);color:var(--text-3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      נתוני האתר בזמן אמת · כל דפי הנחיתה והמשפכים יחד
+    </h2>
+    <span class="meta">המשך המדידה מרגע הגעה לאתר ועד השלמת שאלון המיפוי</span>
+  </div>
+
   <div class="kpi-strip">
     <div class="kpi">
       <div class="kpi-icon purple">
@@ -718,7 +838,9 @@ const ICONS = {
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
   doc:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
   play:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>'
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>',
+  eye:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  cursor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>'
 };
 
 /* ============================================================================
@@ -803,7 +925,7 @@ async function loadData() {
    ============================================================================ */
 
 function render() {
-  let entriesAll = 0, leadsAll = 0;
+  let entriesAll = 0, leadsAll = 0, landingLeadsAll = 0;
   let topPanel = null, topRate = -1;
 
   PANEL_LEGEND.filter(p => p.type === 'landing').forEach(p => {
@@ -811,6 +933,7 @@ function render() {
     const conv = m(`f${p.panel}_landing`);
     entriesAll += entries;
     leadsAll += conv;
+    landingLeadsAll += conv;
     const rate = pct(conv, entries);
     if (entries >= 10 && rate > topRate) { topRate = rate; topPanel = p; }
   });
@@ -839,6 +962,7 @@ function render() {
   renderPanelHistory();
   renderFunnelComparison();
   renderHeadToHead();
+  renderAdFunnel(entriesAll, landingLeadsAll);
 }
 
 /* ============================================================================
@@ -1050,6 +1174,74 @@ function renderHeadToHeadCard(test) {
       </div>
       <div class="ab-variants-grid">${cardsHtml}</div>
     </div>`;
+}
+
+/* ============================================================================
+   AD CAMPAIGN FUNNEL · BANNER → CLICK → LANDING PAGE → LEAD
+   ============================================================================
+   Spend / Impressions / Clicks come from the manual-entry sheet rows
+   (ad_spend / ad_impressions / ad_clicks) until a real Ads Manager API is
+   wired up. Landing-page entries and leads are real, live-tracked numbers
+   -- same source as the rest of this dashboard. */
+
+function renderAdFunnel(landingEntries, leads) {
+  const spend = m('ad_spend');
+  const impressions = m('ad_impressions');
+  const clicks = m('ad_clicks');
+
+  const ctr = pct(clicks, impressions);
+  const cpc = clicks > 0 ? spend / clicks : 0;
+  const cpl = leads > 0 ? spend / leads : 0;
+
+  const spendEl = document.getElementById('ad_kpi_spend');
+  const cpcEl = document.getElementById('ad_kpi_cpc');
+  const cplEl = document.getElementById('ad_kpi_cpl');
+  const ctrEl = document.getElementById('ad_kpi_ctr');
+  if (spendEl) spendEl.textContent = '₪' + fmt(spend);
+  if (cpcEl) cpcEl.textContent = clicks > 0 ? '₪' + cpc.toFixed(2) : '—';
+  if (cplEl) cplEl.textContent = leads > 0 ? '₪' + cpl.toFixed(2) : '—';
+  if (ctrEl) ctrEl.textContent = fmtPct(ctr);
+
+  const adSheetLink = document.getElementById('adSheetLink');
+  if (adSheetLink) adSheetLink.href = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+
+  const stages = [
+    { key: 'impressions', label: 'חשיפות הבאנר (Impressions)', icon: 'eye',    count: impressions },
+    { key: 'clicks',      label: 'קליקים על הבאנר (Clicks)',    icon: 'cursor', count: clicks },
+    { key: 'entries',     label: 'הגיעו לדף הנחיתה',            icon: 'doc',    count: landingEntries },
+    { key: 'leads',       label: 'השאירו פרטים · ליד סופי',     icon: 'check',  count: leads, isEnd: true }
+  ];
+
+  const top = impressions > 0 ? impressions : Math.max(clicks, landingEntries, leads, 1);
+  const stepLabels = ['CTR', 'מעבר לדף נחיתה', 'המרה לליד'];
+
+  let html = '';
+  stages.forEach((s, i) => {
+    const widthPct = top > 0 ? Math.max(s.count > 0 ? 2 : 0, Math.min(100, pct(s.count, top))) : 0;
+    const ofTop = fmtPct(pct(s.count, top));
+    html += `
+      <div class="cf-stage ${s.isEnd ? 'is-end' : ''}">
+        <div class="cf-stage-row">
+          <div class="cf-stage-label"><span class="cf-stage-ic">${ICONS[s.icon] || ''}</span>${s.label}</div>
+          <div class="cf-stage-count mono">${fmt(s.count)}</div>
+        </div>
+        <div class="cf-bar-track"><div class="cf-bar-fill" style="width:${widthPct}%"></div></div>
+        <div class="cf-stage-sub">${i === 0 ? 'נקודת ההתחלה · 100%' : ofTop + ' מסך החשיפות'}</div>
+      </div>`;
+    if (i < stages.length - 1) {
+      const next = stages[i + 1];
+      const stepRate = pct(next.count, s.count);
+      const cls = (s.count > 0 && stepRate < 20) ? 'bad' : '';
+      html += `
+        <div class="cf-connector">
+          <span class="cf-connector-pct ${cls}">↓ ${stepLabels[i]}: ${s.count > 0 ? fmtPct(stepRate) : '—'}</span>
+          <span class="cf-connector-note">${fmt(next.count)} מתוך ${fmt(s.count)}</span>
+        </div>`;
+    }
+  });
+
+  const stagesEl = document.getElementById('ad_funnel_stages');
+  if (stagesEl) stagesEl.innerHTML = html;
 }
 
 const refreshBtn = document.getElementById('refreshBtn');
