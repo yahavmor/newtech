@@ -60,13 +60,18 @@ footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,
 
   <p class="promo-line">ענה על 5 שאלות — ובוא נראה איזה כיוון מתחיל לבלוט אצלך.</p>
 
-  <a class="btn-main" href="quiz.html">כן, תראו לי איפה יכול להיות היתרון שלי →</a>
+  <a class="btn-main" href="quiz.html?panel=6">כן, תראו לי איפה יכול להיות היתרון שלי →</a>
   <p class="trust-line">פחות מ־2 דקות • ללא עלות • ללא התחייבות</p>
 </div>
 
 <footer>NewTech &copy; כל הזכויות שמורות</footer>
 
 <script>
+(function() {
+  try {
+    fetch('https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ panel: 6, metric: 'entry' }) }).catch(function() {});
+  } catch (e) {}
+})();
 (function() {
   var c = document.getElementById('particles');
   var ctx = c.getContext('2d');
