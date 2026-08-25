@@ -85,7 +85,7 @@ footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,
     <div class="screen active" id="screen-intro">
       <h1 class="headline">מיפוי מקצועי לעולם ה-AI והמיומנויות החדשות</h1>
       <p class="sub">5 שאלות קצרות שיעזרו לנו להבין את נקודת הפתיחה שלך, החוזקות שלך והכיוונים שכדאי לבחון ביחס למקום שבו אתה נמצא היום.<br><br>המטרה היא לא לתת לך עוד רשימה גנרית של "מקצועות AI" — אלא לזהות איפה הידע והכלים של העולם החדש יכולים להתחבר בצורה הכי טבעית אליך.</p>
-      <button class="btn-main" onclick="goToQuestion(0)">מתחילים את המיפוי →</button>
+      <button class="btn-main" onclick="startQuiz()">מתחילים את המיפוי →</button>
       <p class="trust-line">כ־2 דקות • ללא עלות • התשובות משמשות למיקוד השיחה האישית שלך</p>
     </div>
 
@@ -189,6 +189,18 @@ try {
   if (stored) lead = JSON.parse(stored);
 } catch (e) {}
 
+var NT_PANEL = new URLSearchParams(location.search).get('panel');
+function ntTrack(metric) {
+  if (!NT_PANEL) return;
+  try {
+    fetch('https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ panel: NT_PANEL, metric: metric }) }).catch(function() {});
+  } catch (e) {}
+}
+function startQuiz() {
+  ntTrack('quiz_start');
+  goToQuestion(0);
+}
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
@@ -281,6 +293,7 @@ function submitQuiz() {
     })
   }).then(function(res) {
     if (!res.ok) throw new Error('bad status');
+    ntTrack('quiz_completed');
     showScreen('screen-success');
   }).catch(function() {
     btn.disabled = false;
