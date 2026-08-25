@@ -193,7 +193,7 @@ var NT_PANEL = new URLSearchParams(location.search).get('panel');
 function ntTrack(metric) {
   if (!NT_PANEL) return;
   try {
-    fetch('https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ panel: NT_PANEL, metric: metric }) }).catch(function() {});
+    new Image().src = 'https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq?panel=' + encodeURIComponent(NT_PANEL) + '&metric=' + encodeURIComponent(metric);
   } catch (e) {}
 }
 function startQuiz() {

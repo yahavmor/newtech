@@ -167,7 +167,7 @@ footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,
 var NT_TRACK_URL = 'https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq';
 function ntTrack(panel, metric) {
   try {
-    fetch(NT_TRACK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ panel: panel, metric: metric }) }).catch(function() {});
+    new Image().src = NT_TRACK_URL + '?panel=' + encodeURIComponent(panel) + '&metric=' + encodeURIComponent(metric);
   } catch (e) {}
 }
 ntTrack(2, 'entry');
