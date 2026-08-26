@@ -165,12 +165,18 @@ footer{position:relative;z-index:2;width:100%;border-top:1px solid rgba(255,255,
 
 <script>
 var NT_TRACK_URL = 'https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq';
-function ntTrack(panel, metric) {
+function ntTrack(panel, metric, extra) {
   try {
-    new Image().src = NT_TRACK_URL + '?panel=' + encodeURIComponent(panel) + '&metric=' + encodeURIComponent(metric);
+    var url = NT_TRACK_URL + '?panel=' + encodeURIComponent(panel) + '&metric=' + encodeURIComponent(metric);
+    if (extra) {
+      for (var k in extra) {
+        if (extra[k] !== undefined && extra[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(extra[k]);
+      }
+    }
+    new Image().src = url;
   } catch (e) {}
 }
-ntTrack(3, 'entry');
+ntTrack(3, 'entry', { step: 1, event: 'page_view' });
 
 window.openPopup = function openPopup() {
   document.getElementById('popup').classList.add('open');
@@ -204,6 +210,7 @@ window.submitForm = function submitForm() {
       phone: phone,
       email: email,
       source: 'landing-a-ar',
+      step: 1,
       page_url: window.location.href,
       submitted_at: new Date().toISOString()
     })
@@ -212,7 +219,7 @@ window.submitForm = function submitForm() {
     try {
       localStorage.setItem('ntLead', JSON.stringify({ name: name, phone: phone, email: email, source: 'landing-a-ar', ts: Date.now() }));
     } catch (e) {}
-    ntTrack(3, 'landing');
+    ntTrack(3, 'landing', { step: 1, event: 'form_submit' });
     document.getElementById('formFields').style.display = 'none';
     document.getElementById('successMsg').classList.add('show');
     setTimeout(function() { window.location.href = 'landing-pages/ar/panel_a.html'; }, 900);
