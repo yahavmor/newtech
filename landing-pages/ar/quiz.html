@@ -190,14 +190,20 @@ try {
 } catch (e) {}
 
 var NT_PANEL = new URLSearchParams(location.search).get('panel');
-function ntTrack(metric) {
+function ntTrack(metric, extra) {
   if (!NT_PANEL) return;
   try {
-    new Image().src = 'https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq?panel=' + encodeURIComponent(NT_PANEL) + '&metric=' + encodeURIComponent(metric);
+    var url = 'https://hook.eu1.make.com/eer2rqsjgtremv7vtjf869bm4lg6seqq?panel=' + encodeURIComponent(NT_PANEL) + '&metric=' + encodeURIComponent(metric);
+    if (extra) {
+      for (var k in extra) {
+        if (extra[k] !== undefined && extra[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(extra[k]);
+      }
+    }
+    new Image().src = url;
   } catch (e) {}
 }
 function startQuiz() {
-  ntTrack('quiz_start');
+  ntTrack('quiz_start', { step: 2, event: 'quiz_start' });
   goToQuestion(0);
 }
 
@@ -228,6 +234,15 @@ function renderQuestion() {
 
 function selectOption(i) {
   answers[current] = i;
+  var q = QUESTIONS[current];
+  ntTrack('quiz_q' + (current + 1), {
+    step: current + 3,
+    event: 'question_answered',
+    question: current + 1,
+    q_text: q.title,
+    a_text: q.options[i],
+    ping: true
+  });
   renderQuestion();
   if (current < QUESTIONS.length - 1) {
     setTimeout(function() { goToQuestion(current + 1); }, 380);
@@ -283,6 +298,7 @@ function submitQuiz() {
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({
       event: 'quiz_completed',
+      step: 8,
       name: name,
       phone: phone,
       email: email,
@@ -293,7 +309,7 @@ function submitQuiz() {
     })
   }).then(function(res) {
     if (!res.ok) throw new Error('bad status');
-    ntTrack('quiz_completed');
+    ntTrack('quiz_completed', { step: 8, event: 'form_submit' });
     showScreen('screen-success');
   }).catch(function() {
     btn.disabled = false;
